@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+  <meta name="description" content="FuddiG AI — A premium multi-model chat interface" />
+  <title>FuddiG AI</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <!-- Syntax Highlighting CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark-dimmed.min.css" id="hljs-theme" />
+
+  <!-- KaTeX CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css" />
+
+  <!-- App Styles -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div id="app">
+
+  <!-- ═══════════════════════ SIDEBAR ═══════════════════════ -->
+  <aside id="sidebar">
+    <div id="sidebar-header">
+      <div id="logo">
+        <span class="logo-mark">Fuddi</span><span class="logo-club">G</span><span class="logo-ai"> AI</span>
+      </div>
+      <button id="new-chat-btn" class="icon-btn" aria-label="New conversation" title="New Chat (Ctrl+N)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+    </div>
+
+    <div id="sidebar-search-wrap">
+      <svg class="search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="sidebar-search" type="text" placeholder="Search conversations..." autocomplete="off" spellcheck="false" />
+    </div>
+
+    <div id="conv-list-wrap">
+      <div id="conv-list">
+        <!-- Dynamically rendered conversation items -->
+      </div>
+      <div id="conv-empty" class="hidden">
+        <span>No conversations yet</span>
+      </div>
+    </div>
+
+    <div id="sidebar-footer">
+      <div id="api-status">
+        <span id="api-status-dot"></span>
+        <span id="api-status-label">No API Key</span>
+      </div>
+      <button id="settings-btn" class="icon-btn" aria-label="Settings" title="Settings (Ctrl+,)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Mobile sidebar overlay -->
+  <div id="sidebar-overlay" class="hidden"></div>
+
+  <!-- ═══════════════════════ MAIN CHAT ═══════════════════════ -->
+  <main id="chat-main">
+
+    <!-- Chat Header -->
+    <header id="chat-header">
+      <div id="header-left">
+        <button id="sidebar-toggle-btn" class="icon-btn" aria-label="Toggle sidebar">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <div id="model-selector-wrap">
+          <button id="model-selector-btn" aria-haspopup="listbox" aria-expanded="false">
+            <span id="model-selector-label">Select Model</span>
+            <svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div id="model-dropdown" class="dropdown hidden" role="listbox">
+            <div id="model-search-wrap">
+              <input id="model-search" type="text" placeholder="Search models..." autocomplete="off" />
+            </div>
+            <div id="model-list"><!-- rendered by JS --></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="header-center">
+        <span id="chat-title-display" role="heading" aria-level="2">New Conversation</span>
+        <input id="chat-title-input" type="text" class="hidden" maxlength="80" />
+      </div>
+
+      <div id="header-right">
+        <button id="thinking-btn" class="icon-btn toggle-btn" aria-label="Toggle thinking mode" title="Thinking Mode (Ctrl+Shift+T)" data-active="false">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/><circle cx="12" cy="12" r="10"/></svg>
+        </button>
+        <button id="websearch-btn" class="icon-btn toggle-btn" aria-label="Toggle web search" title="Web Search" data-active="false">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </button>
+        <button id="export-btn" class="icon-btn" aria-label="Export chat" title="Export Chat">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </button>
+        <div id="export-dropdown" class="dropdown hidden">
+          <button data-export="markdown">Copy as Markdown</button>
+          <button data-export="markdown-dl">Download Markdown</button>
+          <button data-export="json">Download JSON</button>
+          <button data-export="html">Download HTML</button>
+        </div>
+        <button id="clear-chat-btn" class="icon-btn" aria-label="Clear chat" title="Clear Chat (Ctrl+L)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+        </button>
+        <button id="details-toggle-btn" class="icon-btn" aria-label="Toggle details panel" title="Details">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Context Limit Warning Banner -->
+    <div id="context-warning" class="hidden">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <span id="context-warning-text">Approaching context limit — consider starting a new chat</span>
+    </div>
+
+    <!-- Messages -->
+    <div id="messages-container">
+      <!-- Empty State (shown when no messages) -->
+      <div id="empty-state">
+        <div id="empty-logo">
+          <span class="logo-mark">Hack</span><span class="logo-club">Club</span><span class="logo-ai"> AI</span>
+        </div>
+        <p id="empty-subtitle">Your intelligent multi-model chat interface</p>
+        <div id="no-key-banner" class="hidden">
+          <span>Add your API key in Settings to get started</span>
+          <button id="empty-settings-btn">Open Settings</button>
+        </div>
+        <div id="suggestion-grid">
+          <button class="suggestion-card" data-prompt="Explain quantum entanglement in simple terms">
+            <span class="suggestion-icon">⚛️</span>
+            <span>Explain quantum entanglement in simple terms</span>
+          </button>
+          <button class="suggestion-card" data-prompt="Write a Python script to rename files in bulk based on a pattern">
+            <span class="suggestion-icon">🐍</span>
+            <span>Write a bulk file-rename Python script</span>
+          </button>
+          <button class="suggestion-card" data-prompt="Help me write a professional email declining a meeting">
+            <span class="suggestion-icon">✉️</span>
+            <span>Draft a professional decline email</span>
+          </button>
+          <button class="suggestion-card" data-prompt="What are the most important principles of good UI design?">
+            <span class="suggestion-icon">🎨</span>
+            <span>Key principles of great UI design</span>
+          </button>
+          <button class="suggestion-card" data-prompt="Explain the difference between TCP and UDP with examples">
+            <span class="suggestion-icon">🌐</span>
+            <span>TCP vs UDP explained with examples</span>
+          </button>
+          <button class="suggestion-card" data-prompt="Give me a 7-day workout plan for building strength at home">
+            <span class="suggestion-icon">💪</span>
+            <span>7-day home strength workout plan</span>
+          </button>
+        </div>
+      </div>
+      <!-- Message items injected here -->
+    </div>
+
+    <!-- Scroll-to-bottom badge -->
+    <button id="scroll-to-bottom-btn" class="hidden" aria-label="Scroll to latest message">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      <span id="new-msg-badge" class="hidden">New</span>
+    </button>
+
+    <!-- Input Area -->
+    <footer id="input-area">
+      <!-- Image preview strip (shown when image attached) -->
+      <div id="image-preview-strip" class="hidden">
+        <div id="image-preview-thumb-wrap">
+          <img id="image-preview-thumb" alt="Attached image" />
+          <button id="remove-image-btn" aria-label="Remove attached image">×</button>
+        </div>
+      </div>
+
+      <div id="input-box">
+        <button id="attach-btn" class="icon-btn" aria-label="Attach image" title="Attach Image">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66L9.41 17.41a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+        </button>
+        <input id="file-input" type="file" accept="image/jpeg,image/png,image/gif,image/webp" class="hidden" aria-hidden="true" />
+        <textarea id="message-input" placeholder="Message..." rows="1" aria-label="Message input" spellcheck="true"></textarea>
+        <button id="send-btn" aria-label="Send message" title="Send (Enter)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+        </button>
+        <button id="stop-btn" class="hidden" aria-label="Stop generation" title="Stop (Esc)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+        </button>
+      </div>
+
+      <div id="input-footer">
+        <span id="token-counter" title="Estimated tokens">0 tokens</span>
+        <span id="input-hint">Enter to send · Shift+Enter for newline · Ctrl+K for search</span>
+      </div>
+    </footer>
+  </main>
+
+  <!-- ═══════════════════════ DETAILS PANEL ═══════════════════════ -->
+  <aside id="details-panel" class="hidden">
+    <div id="details-header">
+      <span>Details</span>
+      <button id="details-close-btn" class="icon-btn" aria-label="Close details">×</button>
+    </div>
+    <div id="details-content">
+      <section class="details-section" id="details-model-section">
+        <h4>Model</h4>
+        <div id="details-model-name"></div>
+        <div id="details-model-provider" class="muted"></div>
+        <div id="details-model-ctx" class="muted"></div>
+        <div id="details-model-caps"></div>
+      </section>
+      <section class="details-section" id="details-pricing-section">
+        <h4>Pricing (per 1M tokens)</h4>
+        <div id="details-pricing-in"></div>
+        <div id="details-pricing-out"></div>
+      </section>
+      <section class="details-section" id="details-stats-section">
+        <h4>Conversation</h4>
+        <div id="details-msg-count"></div>
+        <div id="details-token-est"></div>
+        <div id="details-cost-est"></div>
+      </section>
+      <section class="details-section" id="details-params-section">
+        <h4>Parameters</h4>
+        <div id="details-temp"></div>
+        <div id="details-max-tokens"></div>
+        <div id="details-thinking-status"></div>
+      </section>
+    </div>
+  </aside>
+
+</div><!-- #app -->
+
+<!-- ═══════════════════════ SETTINGS MODAL ═══════════════════════ -->
+<div id="settings-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+  <div class="modal-backdrop"></div>
+  <div class="modal-panel">
+    <div class="modal-header">
+      <h2 id="settings-title">Settings</h2>
+      <button id="settings-close-btn" class="icon-btn" aria-label="Close settings">×</button>
+    </div>
+    <div class="modal-body">
+      <nav id="settings-nav">
+        <button class="settings-tab active" data-tab="api">API</button>
+        <button class="settings-tab" data-tab="models">Models</button>
+        <button class="settings-tab" data-tab="generation">Generation</button>
+        <button class="settings-tab" data-tab="interface">Interface</button>
+        <button class="settings-tab" data-tab="data">Data</button>
+        <button class="settings-tab" data-tab="shortcuts">Shortcuts</button>
+      </nav>
+      <div id="settings-content">
+
+        <!-- TAB: API -->
+        <div class="settings-pane active" id="tab-api">
+          <div class="setting-group">
+            <label class="setting-label" for="api-key-input">API Key</label>
+            <p class="setting-desc">Your FuddiG AI key. Stored locally, never sent anywhere except the API.</p>
+            <div class="input-with-actions">
+              <input type="password" id="api-key-input" placeholder="sk-or-..." autocomplete="off" spellcheck="false" />
+              <button id="api-key-show-btn" class="icon-btn" aria-label="Show/hide API key" title="Show">👁</button>
+              <button id="api-key-test-btn" class="btn-secondary">Test</button>
+            </div>
+            <div id="api-key-status" class="status-line hidden"></div>
+          </div>
+          <div class="setting-group">
+            <label class="setting-label" for="base-url-input">Base URL</label>
+            <p class="setting-desc">API base URL. Change only if you know what you're doing.</p>
+            <input type="text" id="base-url-input" value="https://ai.hackclub.com/proxy/v1" spellcheck="false" />
+          </div>
+          <div class="setting-group">
+            <label class="setting-label">Connection Status</label>
+            <div id="conn-status-display" class="status-badge">Not connected</div>
+          </div>
+        </div>
+
+        <!-- TAB: MODELS -->
+        <div class="settings-pane hidden" id="tab-models">
+          <div class="setting-group">
+            <label class="setting-label">Chat Model</label>
+            <p class="setting-desc">Default model for new conversations.</p>
+            <div id="chat-model-picker" class="model-picker-wrap">
+              <button class="model-picker-btn" id="settings-chat-model-btn">
+                <span id="settings-chat-model-label">Loading...</span>
+                <svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div id="settings-chat-model-dropdown" class="dropdown hidden">
+                <input class="dropdown-search" type="text" placeholder="Search..." />
+                <div class="dropdown-list"></div>
+              </div>
+            </div>
+          </div>
+          <div class="setting-group">
+            <label class="setting-label">Title Generation Model</label>
+            <p class="setting-desc">Fast, cheap model used to auto-generate conversation titles.</p>
+            <div id="title-model-picker" class="model-picker-wrap">
+              <button class="model-picker-btn" id="settings-title-model-btn">
+                <span id="settings-title-model-label">Loading...</span>
+                <svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div id="settings-title-model-dropdown" class="dropdown hidden">
+                <input class="dropdown-search" type="text" placeholder="Search..." />
+                <div class="dropdown-list"></div>
+              </div>
+            </div>
+          </div>
+          <div class="setting-group">
+            <button id="reload-models-btn" class="btn-secondary">↻ Reload Models</button>
+            <span id="models-last-updated" class="muted"></span>
+          </div>
+        </div>
+
+        <!-- TAB: GENERATION -->
+        <div class="settings-pane hidden" id="tab-generation">
+          <div class="setting-group">
+            <label class="setting-label" for="max-tokens-input">Max Tokens <span id="max-tokens-display" class="setting-value-badge">4096</span></label>
+            <p class="setting-desc">Maximum tokens in the model's response.</p>
+            <input type="range" id="max-tokens-slider" min="256" max="128000" step="256" value="4096" />
+            <input type="number" id="max-tokens-input" min="256" max="128000" step="256" value="4096" />
+          </div>
+          <div class="setting-group">
+            <label class="setting-label" for="temperature-slider">Temperature <span id="temperature-display" class="setting-value-badge">0.7</span></label>
+            <p class="setting-desc">Controls randomness. Lower = focused, higher = creative.</p>
+            <div class="slider-label-row"><span>Deterministic</span><span>Creative</span></div>
+            <input type="range" id="temperature-slider" min="0" max="2" step="0.05" value="0.7" />
+          </div>
+          <div class="setting-group">
+            <div class="setting-row">
+              <div>
+                <label class="setting-label">Thinking Mode Default</label>
+                <p class="setting-desc">Enable extended reasoning by default for new chats.</p>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="thinking-default-toggle" />
+                <span class="toggle-track"></span>
+              </label>
+            </div>
+          </div>
+          <div class="setting-group">
+            <label class="setting-label" for="thinking-budget-slider">Thinking Budget <span id="thinking-budget-display" class="setting-value-badge">8,000 tokens</span></label>
+            <p class="setting-desc">Max tokens reserved for internal reasoning steps.</p>
+            <input type="range" id="thinking-budget-slider" min="1000" max="32000" step="1000" value="8000" />
+          </div>
+          <div class="setting-group">
+            <label class="setting-label" for="system-prompt-input">Default System Prompt</label>
+            <p class="setting-desc">Injected as the first system message in every conversation.</p>
+            <textarea id="system-prompt-input" rows="5" placeholder="You are a helpful assistant..."></textarea>
+          </div>
+        </div>
+
+        <!-- TAB: INTERFACE -->
+        <div class="settings-pane hidden" id="tab-interface">
+          <div class="setting-group">
+            <label class="setting-label" for="font-size-slider">Font Size <span id="font-size-display" class="setting-value-badge">14px</span></label>
+            <input type="range" id="font-size-slider" min="12" max="18" step="1" value="14" />
+          </div>
+          <div class="setting-group">
+            <div class="setting-row">
+              <div>
+                <label class="setting-label">Compact Mode</label>
+                <p class="setting-desc">Tighter spacing between messages.</p>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="compact-mode-toggle" />
+                <span class="toggle-track"></span>
+              </label>
+            </div>
+          </div>
+          <div class="setting-group">
+            <div class="setting-row">
+              <div>
+                <label class="setting-label">Enter to Send</label>
+                <p class="setting-desc">Press Enter to send. Shift+Enter for newline.</p>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="enter-send-toggle" checked />
+                <span class="toggle-track"></span>
+              </label>
+            </div>
+          </div>
+          <div class="setting-group">
+            <div class="setting-row">
+              <div>
+                <label class="setting-label">Show Token Count</label>
+                <p class="setting-desc">Display token count under each assistant message.</p>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="show-tokens-toggle" checked />
+                <span class="toggle-track"></span>
+              </label>
+            </div>
+          </div>
+          <div class="setting-group">
+            <div class="setting-row">
+              <div>
+                <label class="setting-label">Auto-Generate Titles</label>
+                <p class="setting-desc">Automatically name new conversations after the first exchange.</p>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="auto-title-toggle" checked />
+                <span class="toggle-track"></span>
+              </label>
+            </div>
+          </div>
+          <div class="setting-group">
+            <label class="setting-label">Code Theme</label>
+            <div id="code-theme-options" class="radio-group">
+              <label class="radio-label"><input type="radio" name="code-theme" value="dark" checked /> Dark</label>
+              <label class="radio-label"><input type="radio" name="code-theme" value="light" /> Light</label>
+              <label class="radio-label"><input type="radio" name="code-theme" value="github-dark" /> GitHub Dark</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB: DATA -->
+        <div class="settings-pane hidden" id="tab-data">
+          <div class="setting-group">
+            <label class="setting-label">Export All Conversations</label>
+            <p class="setting-desc">Download all conversations as a JSON file.</p>
+            <button id="export-all-btn" class="btn-secondary">Export JSON</button>
+          </div>
+          <div class="setting-group">
+            <label class="setting-label">Import Conversations</label>
+            <p class="setting-desc">Merge conversations from a previously exported JSON file.</p>
+            <button id="import-btn" class="btn-secondary">Import JSON</button>
+            <input type="file" id="import-file-input" accept=".json" class="hidden" />
+          </div>
+          <div class="setting-group">
+            <label class="setting-label">Storage Usage</label>
+            <div id="storage-usage-bar-wrap">
+              <div id="storage-usage-bar"></div>
+            </div>
+            <span id="storage-usage-label" class="muted"></span>
+          </div>
+          <div class="setting-group danger-zone">
+            <label class="setting-label danger-label">Danger Zone</label>
+            <button id="clear-all-convs-btn" class="btn-danger">Clear All Conversations</button>
+            <button id="clear-api-key-btn" class="btn-danger">Remove API Key</button>
+          </div>
+        </div>
+
+        <!-- TAB: SHORTCUTS -->
+        <div class="settings-pane hidden" id="tab-shortcuts">
+          <p class="setting-desc" style="margin-bottom:16px">All keyboard shortcuts available in FuddiG AI.</p>
+          <table id="shortcuts-table">
+            <tbody>
+              <tr><td><kbd>Ctrl</kbd><kbd>N</kbd></td><td>New conversation</td></tr>
+              <tr><td><kbd>Ctrl</kbd><kbd>K</kbd></td><td>Command palette / search</td></tr>
+              <tr><td><kbd>Ctrl</kbd><kbd>,</kbd></td><td>Open settings</td></tr>
+              <tr><td><kbd>Enter</kbd></td><td>Send message</td></tr>
+              <tr><td><kbd>Shift</kbd><kbd>Enter</kbd></td><td>New line in input</td></tr>
+              <tr><td><kbd>Ctrl</kbd><kbd>Enter</kbd></td><td>Send message (always)</td></tr>
+              <tr><td><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>T</kbd></td><td>Toggle thinking mode</td></tr>
+              <tr><td><kbd>Ctrl</kbd><kbd>L</kbd></td><td>Clear current chat</td></tr>
+              <tr><td><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>E</kbd></td><td>Export current chat</td></tr>
+              <tr><td><kbd>Escape</kbd></td><td>Stop generation / close modal</td></tr>
+              <tr><td><kbd>↑</kbd> (empty input)</td><td>Edit last user message</td></tr>
+              <tr><td><kbd>?</kbd> or <kbd>Ctrl</kbd><kbd>/</kbd></td><td>Show this shortcut list</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div><!-- #settings-content -->
+    </div><!-- .modal-body -->
+    <div class="modal-footer">
+      <button id="settings-save-btn" class="btn-primary">Save Settings</button>
+    </div>
+  </div><!-- .modal-panel -->
+</div><!-- #settings-modal -->
+
+<!-- ═══════════════════════ COMMAND PALETTE ═══════════════════════ -->
+<div id="command-palette" class="modal hidden" role="dialog" aria-modal="true" aria-label="Command palette">
+  <div class="modal-backdrop"></div>
+  <div id="command-palette-panel">
+    <div id="command-input-wrap">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="command-input" type="text" placeholder="Search conversations, switch models, run actions..." autocomplete="off" />
+      <kbd class="command-esc">Esc</kbd>
+    </div>
+    <div id="command-results"><!-- rendered by JS --></div>
+    <div id="command-footer">
+      <span><kbd>↑↓</kbd> navigate</span>
+      <span><kbd>Enter</kbd> select</span>
+      <span><kbd>Esc</kbd> close</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ IMAGE LIGHTBOX ═══════════════════════ -->
+<div id="lightbox" class="modal hidden">
+  <div class="modal-backdrop"></div>
+  <div id="lightbox-content">
+    <button id="lightbox-close" class="icon-btn" aria-label="Close image">×</button>
+    <img id="lightbox-img" alt="Full size image" />
+    <a id="lightbox-download" download="hackclub-ai-image.png">⬇ Download</a>
+  </div>
+</div>
+
+<!-- ═══════════════════════ CONFIRM DIALOG ═══════════════════════ -->
+<div id="confirm-dialog" class="modal hidden" role="alertdialog" aria-modal="true">
+  <div class="modal-backdrop"></div>
+  <div id="confirm-panel">
+    <p id="confirm-message">Are you sure?</p>
+    <div id="confirm-actions">
+      <button id="confirm-cancel-btn" class="btn-secondary">Cancel</button>
+      <button id="confirm-ok-btn" class="btn-danger">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ TOAST STACK ═══════════════════════ -->
+<div id="toast-stack" aria-live="polite" aria-atomic="false"></div>
+
+<!-- ═══════════════════════ SCRIPTS ═══════════════════════ -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
